@@ -3,6 +3,8 @@ bin/
 obj/
 out/
 
+*.fs.js
+
 # Node.js dependencies
 node_modules/
 

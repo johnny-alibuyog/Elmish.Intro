@@ -1,5 +1,5 @@
 {
-  "name": "intro",
+  "name": "Elmish.Intro",
   "version": "1.0.0",
   "type": "module",
   "main": "App.fs.js",
