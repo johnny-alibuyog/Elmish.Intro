@@ -1,0 +1,7 @@
+source https://api.nuget.org/v3/index.json
+
+storage: none
+nuget Elmish
+nuget Fable.Elmish
+nuget Fable.Elmish.HMR
+nuget Feliz
