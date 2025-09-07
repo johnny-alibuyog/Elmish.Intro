@@ -1,124 +1,81 @@
-# Elmish + Fable + Shadcn/ui Project Instructions
+# Elmish + Fable + Shadcn/ui Copilot Instructions
 
 ## Architecture Overview
+F# Elmish application compiling to JavaScript via Fable, using React + shadcn/ui. Follows **MVU (Model-View-Update)** pattern with functional state management.
 
-This is an F# Elmish application that compiles to JavaScript via Fable, using React for rendering and shadcn/ui for components. The project follows the **MVU (Model-View-Update)** pattern with functional F# on the frontend.
+## Critical Workflow Commands
+- **NEVER use `dotnet run`** - this will fail with Fable binding errors
+- **Start dev**: `npm start` (runs Fable watch + Vite on port 8080)
+- **Install deps**: `npm install --legacy-peer-deps` (React 19 compatibility required)
+- **Add UI components**: `npx shadcn@latest add [component-name]`
 
-### Key Technologies
-- **Fable**: F# to JavaScript compiler
-- **Elmish**: F# implementation of the Elm architecture (MVU pattern)
-- **Feliz**: F# DSL for React components
-- **Feliz.Shadcn**: F# bindings for shadcn/ui components
-- **Vite**: Frontend build tool and dev server
-- **Paket**: .NET dependency manager
+## F# Component Structure Pattern
+Every Elmish component in `src/` follows this exact structure (see `TodoComponent.fs`):
 
-## Project Structure
-
-```
-src/
-├── App.fs              # Entry point - wires up the Elmish program
-├── TodoComponent.fs    # Main application logic (Model-View-Update)
-├── components/ui/      # shadcn/ui components (TypeScript)
-└── lib/utils.ts        # Utility functions for shadcn/ui
-```
-
-## Development Workflow
-
-### Essential Commands
-- **Start dev server**: `npm start` (compiles F# via Fable + runs Vite)
-- **Install .NET deps**: `dotnet paket install` or `dotnet restore`
-- **Install JS deps**: `npm install --legacy-peer-deps` (required for React 19 compatibility)
-- **Add shadcn component**: `npx shadcn@latest add [component-name]`
-
-### Critical: Never use `dotnet run`
-This project uses Fable compilation. Always use `npm start` which runs:
-`dotnet fable watch --verbose --run npx vite --port 8080`
-
-## F# Elmish Patterns
-
-### MVU Component Structure (see `TodoComponent.fs`)
 ```fsharp
-// 1. Types first - Domain model + Message types
-type Todo = { Id: TodoId; Description: string; Completed: bool }
+// 1. Domain types in AutoOpen Models module
+[<AutoOpen>]
+module Models =
+    type TodoId = TodoId of Guid
+    module TodoId = let unwrap (TodoId id) = id
+    type Todo = { Id: TodoId; Description: string; Completed: bool }
+
+// 2. Messages union type
+type Messages = NewTodoChanged of string | NewTodoCreateRequested | ...
+
+// 3. State type
 type State = { Todos: Todo list; NewTodoDescription: string }
-type Msg = NewTodoChanged of string | NewTodoCreateRequested | ...
 
-// 2. State module with init and update functions
+// 4. State module with private helper functions + update
 module State =
-    let init () = initialState, Cmd.none
-    let update (msg: Msg) (state: State): State * Cmd<Msg> = ...
+    let private withSomeChange state = { state with SomeField = newValue }
+    let private withNoCommand state = state, Cmd.none
+    let update (msg: Messages) (state: State) = 
+        match msg with
+        | SomeMessage -> state |> withSomeChange |> withNoCommand
 
-// 3. View module with render function
+// 5. View module with private render functions
 module View =
-    let render (state: State) (dispatch: Msg -> unit) = ...
+    let private renderSubComponent state dispatch = Html.div [...]
+    let render (state: State) (dispatch: Messages -> unit) = Html.div [...]
 ```
 
-### State Updates Pattern
-Use pipeline composition with helper functions:
-```fsharp
-let update msg state =
-    match msg with
-    | SomeAction -> 
-        state 
-        |> withSomeChange
-        |> withNoCommand
-```
+## Key Domain Patterns
+- **Wrapper types**: Use single-case unions like `TodoId of Guid` with unwrap functions
+- **State updates**: Always use pipeline `state |> withChange |> withNoCommand`
+- **Private helpers**: Break down complex state changes into `private with*` functions
+- **Message dispatch**: Every view function takes `(Messages -> unit)` dispatch parameter
 
-### Feliz View Patterns
+## Feliz + Shadcn Integration
 ```fsharp
-// Use Feliz for React components
+// Standard HTML with Feliz
 Html.div [
-    prop.classes [ "class-name" ]
-    prop.children [ /* child elements */ ]
+    prop.classes [ "bulma-class" ]  // Legacy Bulma CSS
+    prop.children [ /* elements */ ]
 ]
 
-// For shadcn/ui components
+// shadcn/ui components via Feliz.Shadcn
 Shadcn.button [
-    button.variant.secondary
-    prop.text "Click me"
+    button.variant.secondary  // Type-safe variants
     prop.onClick (fun _ -> dispatch SomeMessage)
+    prop.children [ Html.text "Click" ]
 ]
 ```
 
-## Dependency Management
+## File System & Build Chain
+- **F# → JS**: Fable compiles `*.fs` to `*.fs.js` automatically
+- **Entry point**: `src/App.fs.js` referenced in `index.html`
+- **Vite config**: Ignores `.fs` files (Fable handles F# compilation)
+- **Component structure**: F# logic in `src/`, shadcn UI components in `src/components/ui/`
 
-### F# Dependencies (`paket.dependencies`)
-- **Elmish**: Core MVU framework
-- **Fable.Elmish.HMR**: Hot module replacement
-- **Feliz**: React DSL for F#
-- **Feliz.Shadcn**: shadcn/ui bindings
+## Styling Stack Integration
+- **Bulma CSS**: Legacy styling loaded in `index.html`
+- **Tailwind v4**: Modern utilities via `@tailwindcss/vite`
+- **Font Awesome**: Icons via CDN in `index.html`
+- **Utility function**: `@/lib/utils.ts` exports `cn()` for className merging
 
-### JavaScript Dependencies
-- React 19 (requires `--legacy-peer-deps` for compatibility)
-- shadcn/ui + Radix components for UI
-- Tailwind CSS v4 for styling
-
-## Integration Points
-
-### F# ↔ JavaScript
-- Fable compiles F# to `.fs.js` files automatically
-- Entry point: `src/App.fs.js` referenced in `index.html`
-- Vite watches JS output, ignores F# source files (configured in `vite.config.ts`)
-
-### shadcn/ui Integration
-- Components added via CLI land in `src/components/ui/` (TypeScript)
-- F# bindings available through `Feliz.Shadcn`
-- Utilities in `src/lib/utils.ts` for className merging
-
-### Styling Stack
-- Bulma CSS for legacy styling (loaded in `index.html`)
-- Tailwind CSS v4 for modern utility classes
-- Font Awesome for icons
-
-## Common Gotchas
-
-1. **React version conflicts**: Always use `--legacy-peer-deps` when installing npm packages
-2. **F# compilation order**: Files must be ordered correctly in `.fsproj` (dependencies first)
-3. **shadcn package**: Use `shadcn@latest`, not deprecated `shadcn-ui`
-4. **Vite config**: Configured to ignore `.fs` files since Fable handles F# compilation
-
-## File Naming Conventions
-
-- F# modules use PascalCase: `TodoComponent.fs`
-- Generated JS files: `TodoComponent.fs.js`
-- TypeScript components: kebab-case in `components/ui/`
+## Dependency Management Gotchas
+- **Dual package managers**: Paket for .NET deps, npm for JS deps
+- **React compatibility**: Always use `--legacy-peer-deps` flag
+- **shadcn package**: Use `shadcn@latest`, NOT deprecated `shadcn-ui`
+- **F# compilation order**: Dependencies must come first in `.fsproj`
