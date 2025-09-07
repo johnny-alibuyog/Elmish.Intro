@@ -5,9 +5,8 @@
     <TargetFramework>net9.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Extensions.fs" />
-    <Compile Include="TodoComponent.fs" />
-    <Compile Include="App.fs" />
+    <Compile Include="src/TodoComponent.fs" />
+    <Compile Include="src/App.fs" />
   </ItemGroup>
   <Import Project=".paket\Paket.Restore.targets" />
 </Project>

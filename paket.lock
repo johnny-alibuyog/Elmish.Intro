@@ -49,4 +49,7 @@ NUGET
     Feliz.CompilerPlugins (2.2) - restriction: >= netstandard2.0
       Fable.AST (>= 4.2.1) - restriction: >= netstandard2.0
       FSharp.Core (>= 4.7.2) - restriction: >= netstandard2.0
+    Feliz.Shadcn (0.9.1)
+      Feliz (>= 2.8) - restriction: >= netstandard2.0
+      FSharp.Core (>= 9.0.100) - restriction: >= netstandard2.0
     FSharp.Core (9.0.201) - restriction: >= netstandard2.0

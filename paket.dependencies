@@ -5,3 +5,4 @@ nuget Elmish
 nuget Fable.Elmish
 nuget Fable.Elmish.HMR
 nuget Feliz
+nuget Feliz.Shadcn
